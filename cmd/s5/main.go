@@ -20,11 +20,12 @@ func main() {
 		sqlDatabase = cl.Flag("sql.database", "Database the query will run against").Required().String()
 		sqlQuery    = cl.Flag("sql.query", "Query to run on DB").Required().String()
 
-		s3AccessKey   = cl.Flag("s3.accesskey", "S3 Access Key").Required().String()
-		s3SecretKey   = cl.Flag("s3.secretkey", "S3 Secret Key").Required().String()
-		s3Region      = cl.Flag("s3.region", "S3 Region").Required().String()
-		s3Bucket      = cl.Flag("s3.bucket", "S3 Bucket").Required().String()
-		s3Path        = cl.Flag("s3.path", "Destination path").Required().String()
+		s3AccessKey = cl.Flag("s3.accesskey", "S3 Access Key").Required().String()
+		s3SecretKey = cl.Flag("s3.secretkey", "S3 Secret Key").Required().String()
+		s3Region    = cl.Flag("s3.region", "S3 Region").Required().String()
+		s3Bucket    = cl.Flag("s3.bucket", "S3 Bucket").Required().String()
+		s3Path      = cl.Flag("s3.path", "Destination path").Required().String()
+
 		chunkSizeInMB = cl.Flag("chunksizemb", "Uncompressed chunk size to be read incrementally").Default("50").Int()
 		compress      = cl.Flag("compress", "Enable gzip compression").Default("false").Bool()
 
@@ -37,19 +38,22 @@ func main() {
 	log.SetOutput(os.Stdout)
 
 	s5session := s5.S5{
-		SqlHost:         *sqlHost,
-		SqlUser:         *sqlUser,
-		SqlPort:         *sqlPort,
-		SqlPassword:     *sqlPassword,
-		SqlDatabase:     *sqlDatabase,
-		SqlQuery:        *sqlQuery,
-		S3AccessKey:     *s3AccessKey,
-		S3SecretKey:     *s3SecretKey,
-		S3Region:        *s3Region,
-		S3Bucket:        *s3Bucket,
-		S3Path:          *s3Path,
-		ChunkSizeInMB:   *chunkSizeInMB,
-		Compress:        *compress,
+		SqlHost:     *sqlHost,
+		SqlUser:     *sqlUser,
+		SqlPort:     *sqlPort,
+		SqlPassword: *sqlPassword,
+		SqlDatabase: *sqlDatabase,
+		SqlQuery:    *sqlQuery,
+
+		S3AccessKey: *s3AccessKey,
+		S3SecretKey: *s3SecretKey,
+		S3Region:    *s3Region,
+		S3Bucket:    *s3Bucket,
+		S3Path:      *s3Path,
+
+		ChunkSizeInMB: *chunkSizeInMB,
+		Compress:      *compress,
+
 		RecordDelimiter: *recordDelimiter,
 		LineDelimiter:   *lineDelimiter}
 
