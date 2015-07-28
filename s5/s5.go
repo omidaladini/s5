@@ -1,6 +1,10 @@
 package s5
 
 import (
+	"fmt"
+	"log"
+	"os"
+
 	"github.com/omidaladini/s5/gzreader"
 	"github.com/omidaladini/s5/s3"
 	"github.com/omidaladini/s5/sqlstream"
@@ -28,6 +32,11 @@ type S5 struct {
 }
 
 func (s *S5) Run() error {
+
+	log.SetOutput(os.Stdout)
+	log.SetFlags(log.LstdFlags)
+	log.SetPrefix(fmt.Sprintf("[sql://%s -> s3://%s/%s] ", s.SqlDatabase, s.S3Bucket, s.S3Path))
+
 	//Prepare SQL connection
 	sqlStream, err := sqlstream.NewSQLStream(
 		s.SqlUser,

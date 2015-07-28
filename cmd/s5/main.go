@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
 	"os"
@@ -36,8 +35,6 @@ func main() {
 	kingpin.MustParse(cl.Parse(os.Args[1:]))
 
 	log.SetOutput(os.Stdout)
-	log.SetFlags(log.LstdFlags)
-	log.SetPrefix(fmt.Sprintf("[sql://%s -> s3://%s/%s] ", *sqlDatabase, *s3Bucket, *s3Path))
 
 	s5session := s5.S5{
 		SqlHost:         *sqlHost,
@@ -47,6 +44,7 @@ func main() {
 		SqlDatabase:     *sqlDatabase,
 		SqlQuery:        *sqlQuery,
 		S3AccessKey:     *s3AccessKey,
+		S3SecretKey:     *s3SecretKey,
 		S3Region:        *s3Region,
 		S3Bucket:        *s3Bucket,
 		S3Path:          *s3Path,
