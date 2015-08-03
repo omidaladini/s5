@@ -78,15 +78,15 @@ func (s *S3MultipartUploadSession) UploadMultiPart(reader io.Reader, s3Path stri
 	var errCleanup error = nil
 
 	if err != nil {
-		log.Println("Multipart upload failed, aborting.", err)
+		log.Printf("Multipart upload for %s failed, aborting: %v\n", s3Path, err)
 		errCleanup = multi.Abort()
 	} else {
-		log.Println("Multipart upload successful, stitching the parts.")
+		log.Printf("Multipart upload for %s successful, stitching the parts.\n", s3Path)
 		errCleanup = multi.Complete(parts)
 	}
 
 	if errCleanup != nil {
-		log.Println("Abort or complete failed. You should cleanup the parts manually.", errCleanup)
+		log.Println("Abort or complete for %s failed. You should cleanup the parts manually: %v\n", s3Path, errCleanup)
 	}
 
 	return err
@@ -134,7 +134,10 @@ func (s *S3MultipartUploadSession) uploadMultiPart(multi *s3.Multi, reader io.Re
 			totalBytesUploaded = totalBytesUploaded + len(data)
 			parts = append(parts, *part)
 
-			log.Printf("%d parts and ~%dMB of data has been uploaded", len(parts), totalBytesUploaded/(1024.0*1024.0))
+			log.Printf("%d parts of %s and ~%dMB of data has been uploaded",
+				len(parts),
+				multi.Key,
+				totalBytesUploaded/(1024.0*1024.0))
 
 			if errUpload != nil {
 				sendFailure <- struct{}{}
@@ -162,26 +165,22 @@ func (s *S3MultipartUploadSession) uploadMultiPart(multi *s3.Multi, reader io.Re
 func readSinglePart(reader io.Reader, chunkSizeInMB int) ([]byte, error) {
 	data := make([]byte, 1024*1024*chunkSizeInMB)
 
-	log.Printf("Reading %dMB...", chunkSizeInMB)
-
 	readLen, errRead := reader.Read(data)
 	data = data[:readLen]
 
-	log.Printf("Reading of %dMB is done.", chunkSizeInMB)
 	return data, errRead
 }
 
 func uploadSinglePart(multipartSession *s3.Multi, partNum int, data []byte, retry int) (*s3.Part, error) {
 
-	log.Printf("Uploading part #%d to S3...", partNum)
 	part, err := multipartSession.PutPart(partNum, bytes.NewReader(data))
 
 	if err != nil {
 		if retry > 0 {
-			log.Printf("Part %d failed. Retrying.", partNum, err)
+			log.Printf("Part %d for %s failed. Retrying. Error: %v", partNum, multipartSession.Key, err)
 			return uploadSinglePart(multipartSession, partNum, data, retry-1)
 		} else {
-			log.Printf("Part %d failed", partNum, err)
+			log.Printf("Part %d for %s failed. Error: %v", partNum, multipartSession.Key, err)
 			return nil, err
 		}
 	}
