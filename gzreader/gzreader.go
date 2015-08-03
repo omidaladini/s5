@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"errors"
 	"io"
-	"log"
 )
 
 // Reader to reader, funk to funky
@@ -55,10 +54,6 @@ func (r *CompressedReader) Read(p []byte) (n int, err error) {
 	readLenCompressed, _ := r.buf.Read(p)
 
 	r.writtenBytes = r.writtenBytes + int64(readLenCompressed)
-
-	if ratio, err := r.CompressionRatio(); err != nil {
-		log.Println("Compression ratio: %", ratio)
-	}
 
 	return readLenCompressed, err
 }
