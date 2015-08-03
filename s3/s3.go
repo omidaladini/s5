@@ -86,7 +86,8 @@ func (s *S3MultipartUploadSession) UploadMultiPart(reader io.Reader, s3Path stri
 	}
 
 	if errCleanup != nil {
-		log.Println("Abort or complete for %s failed. You should cleanup the parts manually: %v\n", s3Path, errCleanup)
+		log.Println("Abort or complete for %s failed. You should cleanup the parts manually: %v. Original error %v\n", s3Path, errCleanup, err)
+		return errCleanup
 	}
 
 	return err
