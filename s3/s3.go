@@ -69,6 +69,10 @@ func (s *S3MultipartUploadSession) UploadMultiPart(reader io.Reader, s3Path stri
 	bucket := s.getS3Bucket()
 	multi, err := bucket.InitMulti(s3Path, "text/plain", s3.Private)
 
+	if err != nil {
+		return err
+	}
+
 	parts, err := s.uploadMultiPart(multi, reader)
 
 	var errCleanup error = nil
