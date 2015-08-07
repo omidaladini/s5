@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"log"
+	"time"
 
 	"github.com/goamz/goamz/aws"
 	"github.com/goamz/goamz/s3"
@@ -61,12 +62,20 @@ func (s *S3MultipartUploadSession) awsAuth() aws.Auth {
 
 func (s *S3MultipartUploadSession) getS3Bucket() *s3.Bucket {
 	auth := s.awsAuth()
-	return s3.New(auth, aws.Regions[s.s3Region]).Bucket(s.s3Bucket)
+	s3 := s3.New(auth, aws.Regions[s.s3Region])
+
+	s3.ConnectTimeout = time.Second * 10
+	s3.ReadTimeout = time.Second * 20
+	s3.WriteTimeout = time.Second * 20
+	s3.RequestTimeout = time.Second * 120
+
+	return s3.Bucket(s.s3Bucket)
 }
 
 func (s *S3MultipartUploadSession) UploadMultiPart(reader io.Reader, s3Path string) error {
 
 	bucket := s.getS3Bucket()
+
 	multi, err := bucket.InitMulti(s3Path, "text/plain", s3.Private)
 
 	if err != nil {
