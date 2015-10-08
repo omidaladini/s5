@@ -16,7 +16,7 @@ type DataRows interface {
 	Scan(dest ...interface{}) error
 }
 
-type sqlReader struct {
+type SQLReader struct {
 	rows       DataRows
 	nullString string //TODO implement this in code
 
@@ -25,11 +25,12 @@ type sqlReader struct {
 
 	buffer []byte
 	eof    bool
+	cachedNext bool
 }
 
 // SQLReader represents a live output of a Sql query
-func SQLReader(rows DataRows, recordDelimiter string, lineDelimiter string) io.ReadCloser {
-	return &sqlReader{
+func NewSQLReader(rows DataRows, recordDelimiter string, lineDelimiter string) *SQLReader {
+	return &SQLReader{
 		rows:            rows,
 		buffer:          nil,
 		recordDelimiter: "\t",
@@ -37,7 +38,7 @@ func SQLReader(rows DataRows, recordDelimiter string, lineDelimiter string) io.R
 		eof:             false}
 }
 
-func (r *sqlReader) Read(p []byte) (n int, err error) {
+func (r *SQLReader) Read(p []byte) (n int, err error) {
 
 	colNames, colReadError := r.rows.Columns()
 
@@ -54,7 +55,7 @@ func (r *sqlReader) Read(p []byte) (n int, err error) {
 
 	//Read rows until we have enough bytes as requested
 	for len(r.buffer) < len(p) {
-		if !r.rows.Next() {
+		if !r.cachedNext && !r.rows.Next() {
 
 			if r.rows.Err() != nil {
 				return 0, r.rows.Err()
@@ -63,6 +64,8 @@ func (r *sqlReader) Read(p []byte) (n int, err error) {
 			r.eof = true
 			break
 		}
+
+		r.cachedNext = false
 
 		if scanError := r.rows.Scan(readCols...); scanError != nil {
 			return 0, fmt.Errorf("Error scanning retrieved sql columns", scanError)
@@ -86,7 +89,7 @@ func (r *sqlReader) Read(p []byte) (n int, err error) {
 	return readLen, nil
 }
 
-func (r *sqlReader) Close() error {
+func (r *SQLReader) Close() error {
 
 	if err := r.rows.Close(); err != nil {
 		return err
@@ -95,7 +98,7 @@ func (r *sqlReader) Close() error {
 	return nil
 }
 
-func (r *sqlReader) deserializeData(rawColumns [][]byte) []string {
+func (r *SQLReader) deserializeData(rawColumns [][]byte) []string {
 
 	tidyCols := make([]string, len(rawColumns))
 
@@ -112,6 +115,13 @@ func (r *sqlReader) deserializeData(rawColumns [][]byte) []string {
 	}
 
 	return tidyCols
+}
+
+func (r *SQLReader) HasData() bool {
+	if !r.cachedNext {
+		r.cachedNext = r.rows.Next()
+	}
+	return r.cachedNext
 }
 
 // WTF Golang! You haz no min/max for int?

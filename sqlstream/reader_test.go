@@ -26,7 +26,11 @@ func TestSQLReader(t *testing.T) {
 
 	var numRecords int = rand.Intn(1000)
 	rows := NewTestDataRows(numRecords)
-	reader := SQLReader(rows, recordDelimiter, lineDelimiter)
+	reader := NewSQLReader(rows, recordDelimiter, lineDelimiter)
+
+	if !reader.HasData() {
+		t.Errorf("Reader should have data")
+	}
 
 	readAll, _ := ioutil.ReadAll(reader)
 	str := string(readAll)
@@ -49,6 +53,42 @@ func TestSQLReader(t *testing.T) {
 		}
 	}
 
+}
+
+func TestHasDataOnEmpty(t *testing.T) {
+
+	const recordDelimiter = "\t"
+	const lineDelimiter = "\n"
+
+	rows := NewTestDataRows(0)
+	reader := NewSQLReader(rows, recordDelimiter, lineDelimiter)
+
+	if reader.HasData() {
+		t.Errorf("Reader shouldn't have data with no rows")
+	}
+
+	// second invocation to test if state is saved correctly
+	if reader.HasData() {
+		t.Errorf("Reader shouldn't have data with no rows")
+	}
+}
+
+func TestHasData(t *testing.T) {
+	const recordDelimiter = "\t"
+	const lineDelimiter = "\n"
+
+	rows := NewTestDataRows(1)
+
+	reader := NewSQLReader(rows, recordDelimiter, lineDelimiter)
+
+	if !reader.HasData() {
+		t.Errorf("Reader should have data")
+	}
+
+	// second invocation to test if state is saved correctly
+	if !reader.HasData() {
+		t.Errorf("Reader should have data")
+	}
 }
 
 func NewTestDataRows(numRecords int) *TestDataRows {

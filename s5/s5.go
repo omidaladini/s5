@@ -57,6 +57,10 @@ func (s *S5) Run() error {
 		return err
 	}
 
+	if ! sqlReader.HasData() {
+		return nil
+	}
+
 	defer sqlReader.Close()
 
 	//Incrementally Upload to S3

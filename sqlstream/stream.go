@@ -2,7 +2,6 @@ package sqlstream
 
 import (
 	"fmt"
-	"io"
 
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql" // Blank import for mysql driver
@@ -47,7 +46,7 @@ func NewSQLStream(
 		lineDelimiter:   lineDelimiter}, nil
 }
 
-func (s *SQLStream) ExecuteQuery() (io.ReadCloser, error) {
+func (s *SQLStream) ExecuteQuery() (*SQLReader, error) {
 
 	rows, err := s.db.Query(s.sqlQuery)
 
@@ -55,7 +54,7 @@ func (s *SQLStream) ExecuteQuery() (io.ReadCloser, error) {
 		return nil, err
 	}
 
-	reader := SQLReader(rows, s.recordDelimiter, s.lineDelimiter)
+	reader := NewSQLReader(rows, s.recordDelimiter, s.lineDelimiter)
 
 	return reader, nil
 }
